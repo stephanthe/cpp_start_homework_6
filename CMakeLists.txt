@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(containers VERSION 0.1.0 LANGUAGES C CXX)
+project(containers VERSION 0.2.0 LANGUAGES C CXX)
 
-add_executable(containers src/main.cpp)
+set(PROJECT_NAME
+    Containers
+)
 
+project(${PROJECT_NAME})
+
+add_executable(${PROJECT_NAME} 
+                src/main.cpp
+                )
