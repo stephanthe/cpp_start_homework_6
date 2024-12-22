@@ -171,10 +171,20 @@ class SerialContainer
     {
         if (size_ + other.size_ > capacity_)
         {
-            increase_capacity(size_ + other.size_);
+            size_t new_capacity = std::max(capacity_ * 2, size_ + other.size_);
+            T* new_region = new T[new_capacity];
+            std::copy(region_, region_ + index, new_region);
+            std::copy(other.region_, other.region_ + other.size_, new_region + index);
+            std::copy(region_ + index, region_ + size_, new_region + index + other.size_);
+            delete[] region_;
+            region_ = new_region;
+            capacity_ = new_capacity;
         }
-        std::copy(region_ + index, region_ + size_, region_ + index + other.size_);
-        std::copy(other.region_, other.region_ + other.size_, region_ + index);
+        else
+        {
+            std::copy(region_ + index, region_ + size_, region_ + index + other.size_);
+            std::copy(other.region_, other.region_ + other.size_, region_ + index);
+        }
         size_ += other.size_;
     }
 
@@ -257,7 +267,6 @@ class SerialContainer
      *
      * @return An iterator pointing to the first element of the container.
      */
-
 
     size_t size() const noexcept { return size_; }
     const T& operator[](size_t index) const noexcept { return region_[index]; }

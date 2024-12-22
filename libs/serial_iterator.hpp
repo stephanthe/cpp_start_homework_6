@@ -1,6 +1,6 @@
 #pragma once
 #include <iterator>
-#include <vector>
+
 namespace my
 {
 template <typename ValueType>
