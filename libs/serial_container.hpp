@@ -11,8 +11,10 @@ int const initial_capacity = 10;
 template <typename T>
 class SerialContainer
 {
-    typedef ContainerIterator<T> iterator;
-    typedef ContainerIterator<const T> const_iterator;
+//    typedef ContainerIterator<T> iterator;
+    using iterator = ContainerIterator<T>;
+//    typedef ContainerIterator<const T> const_iterator;
+    using const_iterator = ContainerIterator<const T>;
 
    public:
     /**
@@ -29,7 +31,7 @@ class SerialContainer
      *
      * @param capacity Initial capacity of the container.
      */
-    SerialContainer(size_t capacity)
+    explicit SerialContainer(size_t capacity)
         : capacity_(capacity), size_(0), region_(new T[capacity_]) {}
 
     /**
@@ -41,8 +43,9 @@ class SerialContainer
      * @param other The container to be copied.
      */
     SerialContainer(const SerialContainer& other)
-        : capacity_(other.capacity_), size_(other.size_), region_(new T[capacity_])
+        : capacity_(other.capacity_), size_(other.size_)
     {
+        region_ = new T[capacity_];
         std::copy(other.region_, other.region_ + other.size_, region_);
     }
     /**
@@ -53,11 +56,12 @@ class SerialContainer
      *
      * @param other The container to be moved.
      */
+
     SerialContainer(SerialContainer&& other) noexcept
-        : capacity_(other.capacity_), size_(other.size_), region_(other.region_)
-    {
-        other.region_ = nullptr;
-    }
+        : capacity_(std::exchange(other.capacity_, 0)),
+        size_(std::exchange(other.size_, 0)),
+        region_(std::exchange(other.region_, nullptr)) {}
+
     /**
      * Constructor for SerialContainer with elements from a std::initializer_list.
      * Initializes the container with the size of the initializer list and allocates memory to hold the elements.
@@ -65,9 +69,9 @@ class SerialContainer
      *
      * @param elements Initializer list of elements to copy into the container.
      */
-    SerialContainer(std::initializer_list<T> elements) : size_(elements.size())
+
+    SerialContainer(std::initializer_list<T> elements) : size_(elements.size()), capacity_(elements.size())
     {
-        capacity_ = size_;
         region_ = new T[size_];
         std::copy(elements.begin(), elements.end(), region_);
     }
@@ -78,7 +82,7 @@ class SerialContainer
      * This destructor is responsible for releasing the memory allocated by the
      * container.
      */
-    ~SerialContainer() { delete[] region_; }
+    ~SerialContainer() noexcept { delete[] region_; }
     /**
      * Copy assignment operator for SerialContainer.
      *
@@ -92,11 +96,8 @@ class SerialContainer
     {
         if (this != &other)
         {
-            delete[] region_;
-            capacity_ = other.capacity_;
-            size_ = other.size_;
-            region_ = new T[capacity_];
-            std::copy(other.region_, other.region_ + other.size_, region_);
+            SerialContainer temp(other);
+            swap(temp);                
         }
         return *this;
     }
@@ -115,10 +116,9 @@ class SerialContainer
         if (this != &other)
         {
             delete[] region_;
-            capacity_ = other.capacity_;
-            size_ = other.size_;
-            region_ = other.region_;
-            other.region_ = nullptr;
+            capacity_ = std::exchange(other.capacity_, 0);
+            size_ = std::exchange(other.size_, 0);
+            region_ = std::exchange(other.region_, nullptr);
         }
         return *this;
     }
@@ -148,11 +148,14 @@ class SerialContainer
      */
     void insert(const T& value, size_t index)
     {
+        if (index > size_) {
+            throw std::out_of_range("Index out of range");
+        }
         if (size_ == capacity_)
         {
             increase_capacity(capacity_ * 2);
         }
-        std::copy(region_ + index, region_ + size_, region_ + index + 1);
+        std::copy_backward(region_ + index, region_ + size_, region_ + size_ + 1);
         region_[index] = value;
         size_++;
     }
@@ -169,6 +172,9 @@ class SerialContainer
      */
     void insert(SerialContainer& other, size_t index)
     {
+        if (index > size_) {
+            throw std::out_of_range("Index out of range");
+        }
         if (size_ + other.size_ > capacity_)
         {
             size_t new_capacity = std::max(capacity_ * 2, size_ + other.size_);
@@ -182,7 +188,7 @@ class SerialContainer
         }
         else
         {
-            std::copy(region_ + index, region_ + size_, region_ + index + other.size_);
+            std::copy_backward(region_ + index, region_ + size_, region_ + size_ + other.size_);
             std::copy(other.region_, other.region_ + other.size_, region_ + index);
         }
         size_ += other.size_;
@@ -198,6 +204,9 @@ class SerialContainer
      */
     void erase(size_t index)
     {
+        if (index >= size_) {
+            throw std::out_of_range("Index out of range");
+        }
         std::copy(region_ + index + 1, region_ + size_, region_ + index);
         size_--;
     }
@@ -213,6 +222,9 @@ class SerialContainer
      */
     void erase(size_t index, size_t count)
     {
+        if (index + count > size_) {
+            throw std::out_of_range("Index out of range");
+        }
         std::copy(region_ + index + count, region_ + size_, region_ + index);
         size_ -= count;
     }
@@ -236,32 +248,50 @@ class SerialContainer
         }
     }
 
-    T& operator[](size_t index) { return region_[index]; }
+    void clear() {
+        delete[] region_;
+        capacity_ = initial_capacity;
+        size_ = 0;
+        region_ = new T[capacity_];
+    }
 
-    SerialContainer::iterator begin() noexcept
-    {
-        return SerialContainer::iterator(this->region_);
+    void resize(size_t new_size) {
+        if (new_size > capacity_) {
+            increase_capacity(new_size);
+        }
+        size_ = new_size;
     }
-    SerialContainer::const_iterator begin() const noexcept
-    {
-        return SerialContainer::const_iterator(region_);
+
+    /**
+     * Returns an iterator pointing to the first element of the container.
+     *
+     * @return An iterator pointing to the first element of the container.
+     */
+    iterator begin() noexcept {
+        return iterator(region_);
     }
-    SerialContainer::iterator end() noexcept
-    {
-        return SerialContainer::iterator(region_ + size_);
-    }
-    SerialContainer::const_iterator end() const noexcept
-    {
-        return const_iterator(region_ + size_);
-    }
-    SerialContainer::const_iterator cbegin() const noexcept
-    {
+
+    const_iterator begin() const noexcept {
         return const_iterator(region_);
     }
-    SerialContainer::const_iterator cend() const noexcept
-    {
+
+    iterator end() noexcept {
+        return iterator(region_ + size_);
+    }
+
+    const_iterator end() const noexcept {
         return const_iterator(region_ + size_);
     }
+
+    
+    const_iterator cbegin() const noexcept {
+        return const_iterator(region_);
+    }
+
+    const_iterator cend() const noexcept {
+        return const_iterator(region_ + size_);
+    }
+
     /**
      * Returns an iterator pointing to the first element of the container.
      *
@@ -269,8 +299,23 @@ class SerialContainer
      */
 
     size_t size() const noexcept { return size_; }
-    const T& operator[](size_t index) const noexcept { return region_[index]; }
+    
+    
+    T& operator[](size_t index) const noexcept { return region_[index]; }
+    
+    /**
+     * Returns the current capacity of the container.
+     *
+     * @return The current capacity of the container.
+     */
     size_t capacity() const { return capacity_; }
+
+    void swap(SerialContainer& other) noexcept
+    {
+        std::swap(capacity_, other.capacity_);
+        std::swap(size_, other.size_);
+        std::swap(region_, other.region_);
+    }
 
    private:
     size_t capacity_{0};

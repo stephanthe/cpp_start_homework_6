@@ -68,12 +68,8 @@ int main(int argc, char* argv[])
     {
         std::cout << *iter << " ";
     }
-    std::cout << "\n\n";
-    std::cout << "Accessing elements with iterators and iter.get():\n";
-    for (auto iter = container.begin(); iter != container.end(); ++iter)
-    {
-        std::cout << iter.get() << " ";
-    }
+ 
+
     std::cout << "\n\n";
     std::cout << "auto iter : container:\n";
     for (const auto iter : container)
