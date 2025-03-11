@@ -15,12 +15,6 @@ public:
 
     ContainerIterator(pointer ptr) : ptr_(ptr) {}
 
-    ContainerIterator& operator=(const ContainerIterator& other)=default;
-    
-    ContainerIterator& operator=(ContainerIterator&& other)=default;
-
-    ~ContainerIterator() = default;
-    
     // Операторы сравнения
     bool operator==(const ContainerIterator& other) const { return ptr_ == other.ptr_; }
     bool operator!=(const ContainerIterator& other) const { return !(*this == other); }
