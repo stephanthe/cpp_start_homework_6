@@ -58,7 +58,9 @@ class SerialContainer
      * @param other The container to be moved.
      */
 
-     SerialContainer(SerialContainer&& other) noexcept = default;
+     SerialContainer(SerialContainer&& other) noexcept : capacity_(std::exchange(other.capacity_, 0)),
+     size_(std::exchange(other.size_, 0)),
+     region_(std::move(other.region_)) {}
 
     /**
      * Constructor for SerialContainer with elements from a std::initializer_list.
@@ -112,7 +114,14 @@ class SerialContainer
      * @param other The container to be moved.
      * @return A reference to this container.
      */
-    SerialContainer& operator=(SerialContainer&& other) noexcept = default;
+    SerialContainer& operator=(SerialContainer&& other) noexcept {
+        if (this != &other) {
+            capacity_ = std::exchange(other.capacity_, 0);
+            size_ = std::exchange(other.size_, 0);
+            region_ = std::move(other.region_);
+        }
+        return *this;
+    }
 
     /**
      * Adds an element to the end of the container.
@@ -234,7 +243,9 @@ class SerialContainer
     }
 
     void clear() {
-        region_ = std::make_unique<T[]>(initial_capacity);
+        capacity_ = initial_capacity;
+        size_ = 0;
+        region_ = std::make_unique<T[]>(capacity_);
     }
 
     void resize(size_t new_size) {
