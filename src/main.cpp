@@ -13,7 +13,7 @@ std::ostream& operator<<(std::ostream& ostream, const my::SerialContainer<T>& co
     return ostream;
 };
 
-int main(int argc, char* argv[])
+int main()
 {
     {
         my::SerialContainer<int> container;

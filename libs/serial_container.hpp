@@ -23,7 +23,7 @@ class SerialContainer
      * Initializes the container with an initial capacity of 10 elements of type T.
      */
     SerialContainer()
-        : capacity_(initial_capacity), size_(0), region_(std::make_unique<T[]>(capacity_)) {}
+        : size_(0), capacity_(initial_capacity), region_(std::make_unique<T[]>(capacity_)) {}
     /**
      * Constructor for SerialContainer with specified capacity.
      * Initializes the container with the given capacity and sets the size to 0.
@@ -33,7 +33,7 @@ class SerialContainer
      * @param capacity Initial capacity of the container.
      */
     explicit SerialContainer(size_t capacity)
-        : capacity_(capacity), size_(0), region_(std::make_unique<T[]>(capacity_)) {}
+        :  size_(0), capacity_(capacity), region_(std::make_unique<T[]>(capacity_)) {}
 
     /**
      * Copy constructor for SerialContainer.
@@ -44,11 +44,12 @@ class SerialContainer
      * @param other The container to be copied.
      */
     SerialContainer(const SerialContainer& other)
-        : capacity_(other.capacity_), size_(other.size_)
+        : size_(other.size_), capacity_(other.capacity_)
     {
         region_ = std::make_unique<T[]>(capacity_);
         std::copy(other.region_.get(), other.region_.get() + other.size_, region_.get());
     }
+
     /**
      * Move constructor for SerialContainer.
      *
@@ -57,11 +58,10 @@ class SerialContainer
      *
      * @param other The container to be moved.
      */
-
-     SerialContainer(SerialContainer&& other) noexcept : capacity_(std::exchange(other.capacity_, 0)),
-     size_(std::exchange(other.size_, 0)),
-     region_(std::move(other.region_)) {}
-
+     SerialContainer(SerialContainer&& other) noexcept
+        : size_(std::exchange(other.size_, 0)),
+        capacity_(std::exchange(other.capacity_, 0)),
+        region_(std::move(other.region_)) {}
     /**
      * Constructor for SerialContainer with elements from a std::initializer_list.
      * Initializes the container with the size of the initializer list and allocates memory to hold the elements.
@@ -298,6 +298,13 @@ class SerialContainer
      */
     size_t capacity() const { return capacity_; }
 
+    /**
+     * Checks if the container is empty.
+     *
+     * @return True if the container is empty, false otherwise.
+     */
+    bool empty() const { return size_ == 0; }
+
     void swap(SerialContainer& other) noexcept
     {
         std::swap(capacity_, other.capacity_);
@@ -305,9 +312,9 @@ class SerialContainer
         std::swap(region_, other.region_);
     }
 
-   private:
-    size_t capacity_{0};
+    private:
     size_t size_{0};
+    size_t capacity_{0};
     std::unique_ptr<T[]> region_;
 };
 
