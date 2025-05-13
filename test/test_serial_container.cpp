@@ -108,26 +108,33 @@ TEST(SerialContainer, Insert) {
     my::SerialContainer<int> to_insert = {99, 100};
 
     // Act
+    container.insert(to_insert, 5);
     container.insert(to_insert, 2);
+    container.insert(to_insert, 0);
 
     // Assert
-    ASSERT_EQ(container.size(), 7);
-    EXPECT_EQ(container[0], 1);
-    EXPECT_EQ(container[1], 2);
-    EXPECT_EQ(container[2], 99);
-    EXPECT_EQ(container[3], 100);
-    EXPECT_EQ(container[4], 3);
-    EXPECT_EQ(container[5], 4);
-    EXPECT_EQ(container[6], 5);
+    ASSERT_EQ(container.size(), 11);
+    EXPECT_EQ(container[0], 99);
+    EXPECT_EQ(container[1], 100);
+    EXPECT_EQ(container[2], 1);
+    EXPECT_EQ(container[3], 2);
+    EXPECT_EQ(container[4], 99);
+    EXPECT_EQ(container[5], 100);
+    EXPECT_EQ(container[6], 3);
+    EXPECT_EQ(container[7], 4);
+    EXPECT_EQ(container[8], 5);
+    EXPECT_EQ(container[9], 99);
+    EXPECT_EQ(container[10], 100);
 }
 
 TEST(SerialContainer, Resize) {
     // Arrange
     my::SerialContainer<int> container = {1, 2, 3};
-
+    int increased_size = 5;
     // Act & Assert: Increase size
     container.resize(5);
-    ASSERT_EQ(container.size(), 5);
+    ASSERT_EQ(container.size(), increased_size);
+    ASSERT_EQ(container.capacity(), increased_size);
     EXPECT_EQ(container[0], 1);
     EXPECT_EQ(container[1], 2);
     EXPECT_EQ(container[2], 3);
@@ -137,6 +144,7 @@ TEST(SerialContainer, Resize) {
     // Act & Assert: Decrease size
     container.resize(2);
     ASSERT_EQ(container.size(), 2);
+    ASSERT_EQ(container.capacity(), increased_size);
     EXPECT_EQ(container[0], 1);
     EXPECT_EQ(container[1], 2);
 }
@@ -166,6 +174,28 @@ TEST(SerialContainer, PushBack) {
     // Assert
     ASSERT_EQ(container.size(), count);
     ASSERT_FALSE(container.empty());
+    ASSERT_EQ(container.capacity(), count);
+    EXPECT_EQ(container[0], 0);
+    EXPECT_EQ(container[1], 1);
+    EXPECT_EQ(container[2], 2);
+    EXPECT_EQ(container[3], 3);
+    EXPECT_EQ(container[4], 4);
+    EXPECT_EQ(container[5], 5);
+    EXPECT_EQ(container[6], 6);
+    EXPECT_EQ(container[7], 7);
+    EXPECT_EQ(container[8], 8);
+    EXPECT_EQ(container[9], 9);
+    EXPECT_EQ(container[10], 10);
+    EXPECT_EQ(container[11], 11);
+    EXPECT_EQ(container[12], 12);
+    EXPECT_EQ(container[13], 13);
+    EXPECT_EQ(container[14], 14);
+    EXPECT_EQ(container[15], 15);
+    EXPECT_EQ(container[16], 16);
+    EXPECT_EQ(container[17], 17);
+    EXPECT_EQ(container[18], 18);
+    EXPECT_EQ(container[19], 19);
+
 }
 
 TEST(SerialContainer, Erase) {
@@ -193,6 +223,12 @@ TEST(SerialContainer, IncreaseCapacity) {
     container.increase_capacity(capacity);
 
     // Assert
+    ASSERT_EQ(container.capacity(), capacity);
+
+    // Act 2
+    container.increase_capacity(5);
+
+    // Assert 2
     ASSERT_EQ(container.capacity(), capacity);
 
 }
